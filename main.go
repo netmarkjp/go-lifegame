@@ -115,7 +115,7 @@ func (s *Screen) Render() {
 		Output.Flush()
 
 		s.stepGeneration()
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(33 * time.Millisecond)
 	}
 }
 
