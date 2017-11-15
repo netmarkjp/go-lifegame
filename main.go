@@ -7,15 +7,12 @@ import (
 	"time"
 )
 
-var (
-	Output *bufio.Writer = bufio.NewWriter(os.Stdout)
-)
-
 type Screen struct {
 	width             int
 	height            int
 	currentGeneration [][]bool // x, y
 	nextGeneration    [][]bool // x, y
+	output            *bufio.Writer
 }
 
 func (s *Screen) Init(width, height int) {
@@ -23,6 +20,8 @@ func (s *Screen) Init(width, height int) {
 	s.height = height
 	s.initCurrentGeneration(width, height)
 	s.initNextGeneration(width, height)
+	bufSize := (width*height*2+width)/4096 + 1
+	s.output = bufio.NewWriterSize(os.Stdout, bufSize)
 }
 
 func (s *Screen) initCurrentGeneration(width, height int) {
@@ -101,21 +100,21 @@ func (s *Screen) SetInitialAlive(x, y int) {
 
 func (s *Screen) Render() {
 	for {
-		Output.WriteString("\033[H\033[2J")
+		s.output.WriteString("\033[H\033[2J")
 		for _, linedata := range s.currentGeneration {
 			for _, alive := range linedata {
 				if alive {
-					Output.WriteString("＊")
+					s.output.WriteString("＊")
 				} else {
-					Output.WriteString("  ")
+					s.output.WriteString("  ")
 				}
 			}
-			Output.WriteString("\n")
+			s.output.WriteString("\n")
 		}
-		Output.Flush()
+		s.output.Flush()
 
 		s.stepGeneration()
-		time.Sleep(33 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 }
 
