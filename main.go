@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Screen of lifegame
 type Screen struct {
 	width             int
 	height            int
@@ -15,13 +16,14 @@ type Screen struct {
 	output            *bufio.Writer
 }
 
+// Init screen
 func (s *Screen) Init(width, height int) {
 	s.width = width
 	s.height = height
 	s.initCurrentGeneration(width, height)
 	s.initNextGeneration(width, height)
 	bufSize := (width*height*2+width)/4096 + 1
-	s.output = bufio.NewWriterSize(os.Stdout, bufSize)
+	s.output = bufio.NewWriterSize(os.Stdout, bufSize*4096)
 }
 
 func (s *Screen) initCurrentGeneration(width, height int) {
@@ -38,6 +40,7 @@ func (s *Screen) initNextGeneration(width, height int) {
 	}
 }
 
+// CurrentAlive returns liveness of current generation
 func (s *Screen) CurrentAlive(x, y int) bool {
 	return s.currentGeneration[y][x]
 }
@@ -59,16 +62,16 @@ func (s *Screen) progressCell(x, y int) bool {
 
 	for _, cell := range cells {
 		if cell[0] < 0 || cell[1] < 0 {
-			dead += 1
+			dead++
 			continue
 		} else if cell[0] >= s.width-1 || cell[1] >= s.height-1 {
-			dead += 1
+			dead++
 			continue
 		}
 		if s.CurrentAlive(cell[0], cell[1]) {
-			alive += 1
+			alive++
 		} else {
-			dead += 1
+			dead++
 		}
 	}
 
@@ -79,25 +82,27 @@ func (s *Screen) progressCell(x, y int) bool {
 	} else if alive <= 1 {
 		return false
 		// } else if alive >= 4 {
-	} else {
-		return false
-	}
+	} // else {
+	return false
+	//}
 }
 
 func (s *Screen) stepGeneration() {
 	s.initNextGeneration(s.width, s.height)
 	for y, linedata := range s.nextGeneration {
-		for x, _ := range linedata {
+		for x := range linedata {
 			s.nextGeneration[y][x] = s.progressCell(x, y)
 		}
 	}
 	copy(s.currentGeneration, s.nextGeneration)
 }
 
+// SetInitialAlive set alive cell at start
 func (s *Screen) SetInitialAlive(x, y int) {
 	s.currentGeneration[y][x] = true
 }
 
+// Render render screen
 func (s *Screen) Render() {
 	for {
 		s.output.WriteString("\033[H\033[2J")
@@ -114,7 +119,7 @@ func (s *Screen) Render() {
 		s.output.Flush()
 
 		s.stepGeneration()
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -224,6 +229,50 @@ func example2() {
 
 	screen.Render()
 }
+
+func example3() {
+	screen := new(Screen)
+	x := 40
+	y := 40
+	screen.Init(x, y)
+	var n, m int
+
+	//グライダー
+	n = 5
+	m = 5
+	screen.SetInitialAlive(n+1, m)
+	screen.SetInitialAlive(n+2, m+1)
+	screen.SetInitialAlive(n, m+2)
+	screen.SetInitialAlive(n+1, m+2)
+	screen.SetInitialAlive(n+2, m+2)
+
+	screen.Render()
+}
+
+func example4() {
+	screen := new(Screen)
+	x := 20
+	y := 20
+	screen.Init(x, y)
+	var n, m int
+
+	//長さ10の直線
+	n = 5
+	m = 5
+	screen.SetInitialAlive(n, m)
+	screen.SetInitialAlive(n+1, m)
+	screen.SetInitialAlive(n+2, m)
+	screen.SetInitialAlive(n+3, m)
+	screen.SetInitialAlive(n+4, m)
+	screen.SetInitialAlive(n+5, m)
+	screen.SetInitialAlive(n+6, m)
+	screen.SetInitialAlive(n+7, m)
+	screen.SetInitialAlive(n+8, m)
+	screen.SetInitialAlive(n+9, m)
+
+	screen.Render()
+}
+
 func main() {
-	example2()
+	example4()
 }
